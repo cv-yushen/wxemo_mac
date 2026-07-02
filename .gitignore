@@ -1,0 +1,14 @@
+# NEVER commit real keys or decrypted data
+hunted_keys.txt
+all_keys.json
+*.json
+decrypted/
+*.db
+*.db-shm
+*.db-wal
+# build artifacts
+crack_fast
+crack_salt
+find_key_by_salt
+find_raw_key
+*.o
