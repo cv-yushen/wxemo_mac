@@ -11,8 +11,8 @@ wxemo export
 
 敏感步骤（猎钥、读库、解密）**仍在用户本机**；安装只是把 CLI 放进 PATH。
 
-当前仓库：**https://github.com/cv-yushen/wxemo_mac**（private）  
-Tap 仓库：**https://github.com/cv-yushen/homebrew-wxemo**（private）
+当前仓库：**https://github.com/cv-yushen/wxemo_mac**（public）  
+Tap 仓库：**https://github.com/cv-yushen/homebrew-wxemo**（public）
 
 ---
 
@@ -22,25 +22,14 @@ Tap 仓库：**https://github.com/cv-yushen/homebrew-wxemo**（private）
 |------|------|------|
 | GitHub Release | ✅ | https://github.com/cv-yushen/wxemo_mac/releases/tag/v0.1.0 |
 | Homebrew Tap | ✅ | https://github.com/cv-yushen/homebrew-wxemo |
+| Formula | 已指向 `v0.1.0` | `homebrew/wxemo.rb` / tap `Formula/wxemo.rb` |
 | 用户数据目录 | ✅ | `~/.wxemo/` |
 
 ---
 
-## 用户怎么装（私有仓库）
-
-因为源码与 tap 都是 **private**，用户需要：
-
-1. 被加入仓库协作者（或同属有权限的 org）  
-2. 本机已登录 `gh`（或配置 GitHub token）  
-3. 安装前导出 Homebrew 用的 API Token：
+## 用户怎么装（公开仓库，无需授权）
 
 ```bash
-# 登录 GitHub CLI（若尚未登录）
-gh auth login
-
-# 私有源码下载需要 token
-export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
-
 brew tap cv-yushen/wxemo
 brew install wxemo
 
@@ -52,7 +41,6 @@ wxemo wizard
 升级：
 
 ```bash
-export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
 brew update && brew upgrade wxemo
 ```
 
@@ -108,32 +96,30 @@ bash scripts/release.sh 0.1.1
 
 ## 可选：PyPI / pipx
 
-适合已装 Python 的环境；私有 Git 安装示例：
-
 ```bash
 brew install pipx && pipx ensurepath
 pipx install "git+https://github.com/cv-yushen/wxemo_mac.git@v0.1.0"
 ```
 
-私有仓库同样需要 GitHub 认证。公开到 PyPI 需另配账号与 `twine`，当前以 Homebrew 为主。
+公开仓库一般无需额外 GitHub 登录。发布到 PyPI 需另配账号与 `twine`，当前以 Homebrew 为主。
 
 ---
 
 ## 私有 vs 公开
 
-| | 私有（当前） | 若改为公开 |
-|--|-------------|------------|
-| `brew tap/install` | 需要 token + 仓库权限 | 一般用户可直接装 |
-| 安全 | 源码不公开 | 需接受代码公开 |
+当前 **wxemo_mac** 与 **homebrew-wxemo** 均为 **public**：普通用户 `brew tap` / `brew install` **不需要** GitHub 授权或 `HOMEBREW_GITHUB_API_TOKEN`。
 
-若以后希望任意人 `brew install` 而无需授权，把 `wxemo_mac` 与 `homebrew-wxemo` 设为 **public**，并去掉文档里对 `HOMEBREW_GITHUB_API_TOKEN` 的强制要求即可。
+若改回 private，则安装方必须有仓库权限，并设置：
+
+```bash
+export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
+```
 
 ---
 
 ## 本地试装（维护者自测）
 
 ```bash
-export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
 brew untap cv-yushen/wxemo 2>/dev/null || true
 brew tap cv-yushen/wxemo
 brew install wxemo

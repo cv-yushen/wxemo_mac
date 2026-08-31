@@ -25,9 +25,6 @@ class Wxemo < Formula
 
   def caveats
     <<~EOS
-      Private repo: set a GitHub token before install/upgrade:
-        export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
-
       User data (keys & exports):
         ~/.wxemo/
 

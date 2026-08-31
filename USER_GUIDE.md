@@ -4,7 +4,7 @@
 
 > **适用范围**：macOS（建议 Apple Silicon）+ 微信 4.1.x  
 > **用途**：个人账号数据导出  
-> **分发安装**：见 [DISTRIBUTE.md](./DISTRIBUTE.md)（Homebrew / pipx，无需每次 clone）  
+> **分发安装**：见 [DISTRIBUTE.md](./DISTRIBUTE.md)（`brew tap cv-yushen/wxemo && brew install wxemo`）  
 > **不包含**：向小红书/抖音等平台自动导入表情  
 
 ---
@@ -14,7 +14,7 @@
 ### Homebrew（推荐）
 
 ```bash
-brew tap YOUR_USER/wxemo          # 维护者发布 tap 后替换
+brew tap cv-yushen/wxemo
 brew install wxemo
 xcode-select --install            # 若无 lldb
 wxemo --help
