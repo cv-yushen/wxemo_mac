@@ -1,11 +1,8 @@
-# Homebrew formula template for wxemo
-# After release: copy to homebrew-wxemo tap as Formula/wxemo.rb and set sha256
-
 class Wxemo < Formula
   desc "Export WeChat macOS emoticon stickers to local files"
-  homepage "https://github.com/Evanyuan-builder/wxemo_mac"
-  url "https://github.com/Evanyuan-builder/wxemo_mac/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "REPLACE_WITH_TARBALL_SHA256"
+  homepage "https://github.com/cv-yushen/wxemo_mac"
+  url "https://github.com/cv-yushen/wxemo_mac/archive/refs/tags/v0.1.0.tar.gz"
+  sha256 "1076a520fe1a97b65ff4c47220c6d32e9a0517950490b6deaf2d342dd1444e22"
   license "MIT"
   version "0.1.0"
 
@@ -28,10 +25,13 @@ class Wxemo < Formula
 
   def caveats
     <<~EOS
-      User data (keys & exports) is stored in:
+      Private repo: set a GitHub token before install/upgrade:
+        export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
+
+      User data (keys & exports):
         ~/.wxemo/
 
-      Requires Xcode Command Line Tools (for lldb):
+      Requires Xcode Command Line Tools (lldb):
         xcode-select --install
 
       Quick start:
