@@ -1,24 +1,38 @@
 class Wxemo < Formula
   desc "Export WeChat macOS emoticon stickers to local files"
   homepage "https://github.com/cv-yushen/wxemo_mac"
-  url "https://github.com/cv-yushen/wxemo_mac/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "1076a520fe1a97b65ff4c47220c6d32e9a0517950490b6deaf2d342dd1444e22"
+  url "https://github.com/cv-yushen/wxemo_mac/archive/refs/tags/v0.1.1.tar.gz"
+  sha256 "REPLACE_SHA256"
   license "MIT"
-  version "0.1.0"
+  version "0.1.1"
 
-  depends_on "python@3.12"
+  depends_on "python3"
   depends_on "openssl@3"
 
   def install
     libexec.install Dir["*"]
 
+    # Resolve python3 at runtime so a broken/missing python@3.12 keg cannot break the CLI.
     (bin/"wxemo").write <<~EOS
       #!/bin/bash
       set -euo pipefail
       export WXEMO_PKG_ROOT="#{libexec}"
       export WXEMO_HOME="${WXEMO_HOME:-${HOME}/.wxemo}"
       mkdir -p "$WXEMO_HOME"
-      exec "#{Formula["python@3.12"].opt_bin}/python3" "#{libexec}/cli.py" "$@"
+      PY=""
+      for c in "#{Formula["python3"].opt_bin}/python3" python3 python3.13 python3.12 python3.11; do
+        if [[ "$c" == /* ]]; then
+          [[ -x "$c" ]] && PY="$c" && break
+        elif command -v "$c" >/dev/null 2>&1; then
+          PY="$(command -v "$c")"
+          break
+        fi
+      done
+      if [[ -z "$PY" ]]; then
+        echo "wxemo: python3 not found. Try: brew install python3" >&2
+        exit 1
+      fi
+      exec "$PY" "#{libexec}/cli.py" "$@"
     EOS
     chmod 0755, bin/"wxemo"
   end

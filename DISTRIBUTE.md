@@ -31,6 +31,7 @@ Tap 仓库：**https://github.com/cv-yushen/homebrew-wxemo**（public）
 
 ```bash
 brew tap cv-yushen/wxemo
+brew trust cv-yushen/wxemo    # Homebrew 6+：第三方 tap 需先信任
 brew install wxemo
 
 xcode-select --install   # 若无 lldb
@@ -122,6 +123,7 @@ export HOMEBREW_GITHUB_API_TOKEN="$(gh auth token)"
 ```bash
 brew untap cv-yushen/wxemo 2>/dev/null || true
 brew tap cv-yushen/wxemo
+brew trust cv-yushen/wxemo
 brew install wxemo
 wxemo --help
 wxemo status

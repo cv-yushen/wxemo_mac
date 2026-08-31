@@ -15,6 +15,7 @@
 
 ```bash
 brew tap cv-yushen/wxemo
+brew trust cv-yushen/wxemo    # Homebrew 6+：第三方 tap 需先信任
 brew install wxemo
 xcode-select --install            # 若无 lldb
 wxemo --help
