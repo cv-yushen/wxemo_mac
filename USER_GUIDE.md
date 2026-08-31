@@ -21,16 +21,26 @@ xcode-select --install            # 若无 lldb
 wxemo --help
 ```
 
-### 开发者模式（本仓库内）
+### 开发者模式（本仓库内，未 brew 安装时）
 
 ```bash
 cd /path/to/wechat-4.1.10-macos-key
-./wxemo --help
+./wxemo --help          # 仅在仓库目录内可用
 # 或
-pipx install .
+python3 cli.py --help
+# 或
+pipx install .          # 安装后任意目录用 wxemo
 ```
 
-安装后可在**任意目录**执行 `wxemo ...`。
+安装后可在**任意目录**执行 `wxemo ...`（走 PATH，不要写 `./wxemo`）。
+
+需要管理员权限时推荐：
+
+```bash
+sudo "$(which wxemo)" hunt
+```
+
+（`sudo` 可能读不到 Homebrew 的 PATH，直接写 `sudo wxemo` 有时会找不到命令。）
 
 **用户数据默认写在：**
 
@@ -77,7 +87,7 @@ pipx install .
 ```bash
 cd /path/to/wechat-4.1.10-macos-key
 chmod +x wxemo          # 首次使用
-./wxemo --help
+wxemo --help
 ```
 
 也可使用：`python3 cli.py <子命令>`。
@@ -95,13 +105,13 @@ chmod +x wxemo          # 首次使用
                      必须在微信里打开表情面板
                      才能抓到 emoticon.db 的密钥
 
-一键替代：./wxemo wizard   （控制台逐步提示，内含上述步骤）
-随时检查：./wxemo status
+一键替代：wxemo wizard   （控制台逐步提示，内含上述步骤）
+随时检查：wxemo status
 ```
 
 **推荐两种用法：**
 
-1. **新手**：只跑 `./wxemo wizard`，按屏幕提示操作。  
+1. **新手**：只跑 `wxemo wizard`，按屏幕提示操作。  
 2. **熟手**：按 `prep` → `hunt` → `export` 分步执行（`verify` 可单独用，也可由 `export` 自动完成）。
 
 ---
@@ -112,10 +122,10 @@ chmod +x wxemo          # 首次使用
 cd /path/to/wechat-4.1.10-macos-key
 
 # 1. 看当前状态
-./wxemo status
+wxemo status
 
 # 2. 交互向导（推荐）
-./wxemo wizard
+wxemo wizard
 ```
 
 向导会依次让你：
@@ -143,7 +153,7 @@ open emoticon_exports
 **命令：**
 
 ```bash
-./wxemo status
+wxemo status
 ```
 
 **你会看到类似：**
@@ -166,7 +176,7 @@ open emoticon_exports
 **命令：**
 
 ```bash
-./wxemo wizard
+wxemo wizard
 ```
 
 **你需要做的：**
@@ -195,13 +205,13 @@ open emoticon_exports
 
 ```bash
 # 仅复制并签名
-./wxemo prep
+wxemo prep
 
 # 复制签名后直接打开
-./wxemo prep --open
+wxemo prep --open
 
 # 微信正在跑时强制继续（会先尝试结束微信）
-./wxemo prep --force --open
+wxemo prep --force --open
 ```
 
 **常用选项：**
@@ -216,7 +226,7 @@ open emoticon_exports
 **操作步骤：**
 
 1. 退出正式微信（或按提示允许脚本 `killall`）。  
-2. 执行 `./wxemo prep --open`。  
+2. 执行 `wxemo prep --open`。  
 3. 在弹出的**副本**微信中扫码登录（与正式版共用同一数据目录）。  
 4. 确认登录成功后再进行猎钥。
 
@@ -231,19 +241,20 @@ open emoticon_exports
 **命令（必须 sudo）：**
 
 ```bash
-sudo ./wxemo hunt
+sudo "$(which wxemo)" hunt
 ```
 
 **操作步骤（务必按顺序）：**
 
-1. 确保**可调试副本**微信已登录并在运行（`./wxemo status` 能看到 PID）。  
-2. 执行 `sudo ./wxemo hunt`，输入密码。  
-3. 终端出现 `keyhunt armed` / `bp CCCrypt ...` 后：  
+1. 确保**可调试副本**微信已登录并在运行（`wxemo status` 能看到 PID）。  
+2. 执行 `sudo "$(which wxemo)" hunt`，输入密码。  
+3. 终端会打印完整操作说明；出现 `keyhunt armed` 后：  
    - 切换到微信  
    - 打开任意聊天  
-   - **打开表情面板、浏览收藏表情、最好发送一条表情**  
+   - **打开表情面板、浏览收藏表情、最好发送或点选一条表情**  
 4. 终端陆续出现 `KEY32: <64位十六进制>`。  
 5. 出现多行后，按 `Ctrl-C`，再输入 `quit` 回车，退出 lldb。  
+6. 执行 `wxemo export`（或先 `wxemo status` / `wxemo verify`）。
 
 **产物：** 项目目录下的 `hunted_keys.txt`（多库密钥列表，去重追加；每次 `keyhunt_start` 会清空重写，以脚本实现为准）。
 
@@ -251,7 +262,7 @@ sudo ./wxemo hunt
 
 - 没有打开表情相关界面 → 抓不到 `emoticon.db` 对应密钥  
 - 附加的是未签名/不可调试的正式版 → 附加失败或无断点  
-- 未使用 `sudo` → 工具会提示改用 `sudo ./wxemo hunt`
+- 未使用 `sudo` → 工具会提示改用 `sudo "$(which wxemo)" hunt`
 
 ---
 
@@ -263,16 +274,16 @@ sudo ./wxemo hunt
 
 ```bash
 # 自动查找本机 emoticon.db + 使用 hunted_keys.txt
-./wxemo verify
+wxemo verify
 
 # 指定库与密钥文件
-./wxemo verify --db "/path/to/emoticon.db" --keys hunted_keys.txt
+wxemo verify --db "/path/to/emoticon.db" --keys hunted_keys.txt
 
 # 只打印，不写文件
-./wxemo verify --no-write-key
+wxemo verify --no-write-key
 
 # 写入自定义路径
-./wxemo verify --write-key /tmp/my_emoticon_key.txt
+wxemo verify --write-key /tmp/my_emoticon_key.txt
 ```
 
 **选项：**
@@ -291,7 +302,7 @@ MATCH! key= 27932513...d30b  reserve= 80
 wrote .../emoticon_key.txt
 ```
 
-**说明：** 日常可直接跑 `./wxemo export`，内部会自动做匹配；需要单独确认密钥时用 `verify`。
+**说明：** 日常可直接跑 `wxemo export`，内部会自动做匹配；需要单独确认密钥时用 `verify`。
 
 **多账号注意：** 自动查找时若有多个账号目录，会取排序后的第一个；不确定时请用 `--db` 指定路径。
 
@@ -310,22 +321,22 @@ wrote .../emoticon_key.txt
 
 ```bash
 # 最常用：自动找库、自动匹配密钥、下载图片
-./wxemo export
+wxemo export
 
 # 已有密钥
-./wxemo export --key 279325130a03af55d130efb22bdaea464a7e2fb45793a817cac6f6ef575ed30b
+wxemo export --key 279325130a03af55d130efb22bdaea464a7e2fb45793a817cac6f6ef575ed30b
 
 # 只用本地密钥文件
-./wxemo export --key-file emoticon_key.txt
+wxemo export --key-file emoticon_key.txt
 
 # 只导出元数据，不下载图片
-./wxemo export --metadata-only
+wxemo export --metadata-only
 
 # 额外保留解密后的明文 SQLite
-./wxemo export --keep-decrypted
+wxemo export --keep-decrypted
 
 # 指定输出目录 / 并发
-./wxemo export --out ./my_exports --workers 8 --timeout 30
+wxemo export --out ./my_exports --workers 8 --timeout 30
 ```
 
 **选项：**
@@ -351,7 +362,7 @@ wrote .../emoticon_key.txt
 **操作步骤：**
 
 1. 确认已猎钥成功，或已有 `emoticon_key.txt`。  
-2. 执行 `./wxemo export`。  
+2. 执行 `wxemo export`。  
 3. 等待进度打印至 `done: ok=...`。  
 4. 查看 `emoticon_exports/images/` 与 `download_report.json`。  
 
@@ -365,41 +376,41 @@ wrote .../emoticon_key.txt
 
 ```bash
 cd /path/to/wechat-4.1.10-macos-key
-./wxemo status
-./wxemo prep --open
+wxemo status
+wxemo prep --open
 # → 在副本微信登录
 
-sudo ./wxemo hunt
+sudo "$(which wxemo)" hunt
 # → 打开表情面板，看到 KEY32 后 Ctrl-C / quit
 
-./wxemo export
+wxemo export
 open emoticon_exports/images
 ```
 
 或：
 
 ```bash
-./wxemo wizard
+wxemo wizard
 ```
 
 ### 剧本 B：密钥还在，只想再下一次 / 补失败项
 
 ```bash
-./wxemo status
-./wxemo export
+wxemo status
+wxemo export
 ```
 
 ### 剧本 C：只更新 CDN 元数据，不重新下图
 
 ```bash
-./wxemo export --metadata-only
+wxemo export --metadata-only
 ```
 
 ### 剧本 D：换账号 / 指定库
 
 ```bash
-./wxemo verify --db "$HOME/Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files/<你的账号目录>/db_storage/emoticon/emoticon.db"
-./wxemo export --db "同上路径"
+wxemo verify --db "$HOME/Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files/<你的账号目录>/db_storage/emoticon/emoticon.db"
+wxemo export --db "同上路径"
 ```
 
 ---
@@ -435,11 +446,11 @@ open emoticon_exports/images
 
 ### Q1：`none of the hunted keys decrypt emoticon.db`
 
-猎钥时没有触发表情库解密。解决：重新 `sudo ./wxemo hunt`，并**明确打开表情面板/收藏表情**。
+猎钥时没有触发表情库解密。解决：重新 `sudo "$(which wxemo)" hunt`，并**明确打开表情面板/收藏表情**。
 
 ### Q2：`WeChat not running`
 
-先 `./wxemo prep --open` 或手动打开副本微信并登录。
+先 `wxemo prep --open` 或手动打开副本微信并登录。
 
 ### Q3：`codesign ... Operation not permitted`
 
@@ -447,39 +458,39 @@ open emoticon_exports/images
 
 ### Q4：下载部分失败
 
-再执行一次 `./wxemo export`；看 `download_report.json` 里的 `error`。CDN 偶发超时属正常。
+再执行一次 `wxemo export`；看 `download_report.json` 里的 `error`。CDN 偶发超时属正常。
 
 ### Q5：多账号导出错了库
 
-用 `./wxemo status` 看当前自动选中的路径，再用 `--db` 指定正确账号下的 `emoticon.db`。
+用 `wxemo status` 看当前自动选中的路径，再用 `--db` 指定正确账号下的 `emoticon.db`。
 
 ### Q6：是否需要每次都猎钥？
 
-不需要。只要 `emoticon_key.txt` 仍能解开当前库，直接 `./wxemo export` 即可。微信大版本更新或换机后再猎钥。
+不需要。只要 `emoticon_key.txt` 仍能解开当前库，直接 `wxemo export` 即可。微信大版本更新或换机后再猎钥。
 
 ### Q7：和旧脚本是什么关系？
 
 | 旧脚本 | 现 CLI |
 |--------|--------|
-| `run_emoticon_export.sh` | `./wxemo wizard` |
-| `hunt.sh` | `sudo ./wxemo hunt` |
-| `emoticon_pipeline.sh` | `./wxemo export` |
-| `verify_keys.py` | `./wxemo verify` |
+| `run_emoticon_export.sh` | `wxemo wizard` |
+| `hunt.sh` | `sudo "$(which wxemo)" hunt` |
+| `emoticon_pipeline.sh` | `wxemo export` |
+| `verify_keys.py` | `wxemo verify` |
 
-旧脚本仍可单独使用；日常推荐统一用 `./wxemo`。
+旧脚本仍可单独使用；日常推荐统一用 `wxemo`。
 
 ---
 
 ## 10. 命令速查表
 
 ```bash
-./wxemo --help
-./wxemo status
-./wxemo wizard
-./wxemo prep [--source PATH] [--copy PATH] [--open] [--force]
-sudo ./wxemo hunt
-./wxemo verify [--db PATH] [--keys FILE] [--write-key FILE] [--no-write-key]
-./wxemo export [--db PATH] [--key HEX] [--key-file FILE] [--keys-file FILE] \
+wxemo --help
+wxemo status
+wxemo wizard
+wxemo prep [--source PATH] [--copy PATH] [--open] [--force]
+sudo "$(which wxemo)" hunt
+wxemo verify [--db PATH] [--keys FILE] [--write-key FILE] [--no-write-key]
+wxemo export [--db PATH] [--key HEX] [--key-file FILE] [--keys-file FILE] \
                [--out DIR] [--workers N] [--timeout SEC] \
                [--metadata-only] [--keep-decrypted]
 ```
@@ -495,4 +506,4 @@ sudo ./wxemo hunt
 
 ---
 
-*文档对应工具入口：`./wxemo` / `python3 cli.py`。若命令行为有更新，以 `./wxemo --help` 为准。*
+*文档对应工具入口：`wxemo` / `python3 cli.py`。若命令行为有更新，以 `wxemo --help` 为准。*

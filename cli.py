@@ -2,7 +2,7 @@
 """统一命令行入口：微信 emoticon.db 猎钥 → 校验 → 解密 → CDN 下载。
 
 用法:
-  ./wxemo <子命令> [选项]
+  wxemo <子命令> [选项]
   python3 cli.py <子命令> [选项]
 
 子命令:
@@ -14,13 +14,13 @@
   status   查看本机密钥/导出状态
 
 示例:
-  ./wxemo wizard
-  ./wxemo prep
-  sudo ./wxemo hunt
-  ./wxemo verify --db ~/.../emoticon.db --write-key emoticon_key.txt
-  ./wxemo export
-  ./wxemo export --metadata-only
-  ./wxemo status
+  wxemo wizard
+  wxemo prep
+  sudo "$(which wxemo)" hunt
+  wxemo verify --db ~/.../emoticon.db --write-key emoticon_key.txt
+  wxemo export
+  wxemo export --metadata-only
+  wxemo status
 """
 
 from __future__ import annotations
@@ -104,7 +104,7 @@ def cmd_prep(args: argparse.Namespace) -> None:
     print(f"完成: {dst}")
     if args.open:
         _run(["open", "-n", str(dst)], check=False)
-        print("已启动微信副本，请登录后执行: sudo ./wxemo hunt")
+        print('已启动微信副本，请登录后执行: sudo "$(which wxemo)" hunt')
 
 
 def cmd_hunt(_: argparse.Namespace) -> None:
@@ -114,8 +114,17 @@ def cmd_hunt(_: argparse.Namespace) -> None:
     if not keyhunt_script().is_file():
         sys.exit(f"missing {keyhunt_script()}")
     if os.geteuid() != 0:
-        print("hunt 需要附加进程，请使用: sudo wxemo hunt")
-        print(f"(当前用户数据目录: {data_dir()})")
+        print("")
+        print("hunt 需要管理员权限以附加微信进程。")
+        print("")
+        print("请执行：")
+        print('  sudo "$(which wxemo)" hunt')
+        print("")
+        print("执行前请确认：")
+        print("  • 可调试微信副本已启动并登录（可用: wxemo prep --open）")
+        print("  • wxemo status 能看到 WeChat process")
+        print("")
+        print(f"用户数据目录: {data_dir()}")
         sys.exit(1)
     # sudo 下仍写入调用者的 ~/.wxemo（通过环境变量传递）
     env = _child_env()
@@ -148,7 +157,7 @@ def cmd_verify(args: argparse.Namespace) -> None:
     keys_path = Path(args.keys).expanduser() if args.keys else KEYS_FILE
     cands = load_hex_keys(keys_path)
     if not cands:
-        sys.exit(f"no keys in {keys_path}; run: sudo ./wxemo hunt")
+        sys.exit('no keys in {keys_path}; run: sudo "$(which wxemo)" hunt'.format(keys_path=keys_path))
 
     print(f"testing {len(cands)} keys against {db}...")
     try:
@@ -240,7 +249,7 @@ def cmd_status(_: argparse.Namespace) -> None:
     print("下一步提示:")
     if n_hunt == 0 and not KEY_FILE.is_file():
         print("  1) wxemo prep --open")
-        print("  2) sudo wxemo hunt   # 打开表情面板后 Ctrl-C / quit")
+        print("  2) sudo \"$(which wxemo)\" hunt   # 打开表情面板后 Ctrl-C / quit")
         print("  3) wxemo export")
     elif not (OUT_DIR / "images").is_dir() or not any((OUT_DIR / "images").glob("*")):
         print("  wxemo export")

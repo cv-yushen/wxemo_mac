@@ -76,7 +76,14 @@ def keyhunt_start(debugger, command, result, internal_dict):
         bp = t.BreakpointCreateByName(name)
         bp.SetScriptCallbackFunction(cb)
         print("bp %s -> %d locations" % (name, bp.GetNumLocations()))
-    print("keyhunt armed. writing 32-byte keys to", OUT)
+    print("")
+    print("keyhunt armed.")
+    print("writing 32-byte keys to:", OUT)
+    print("")
+    print(">>> 下一步：切换到微信，打开表情面板 / 收藏表情（可发一条表情）")
+    print(">>> 看到 KEY32: ... 若干行后：Ctrl-C，再输入 quit 回车")
+    print(">>> 结束后执行：wxemo export")
+    print("")
 
 
 def __lldb_init_module(debugger, internal_dict):
