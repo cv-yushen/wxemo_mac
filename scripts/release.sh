@@ -2,11 +2,11 @@
 # Maintainer release helper: tag → GitHub Release → update Homebrew tap sha256
 #
 # Usage:
-#   bash scripts/release.sh 0.1.1
+#   bash scripts/release.sh 0.1.2
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-VER="${1:?usage: release.sh <version without v, e.g. 0.1.1>}"
+VER="${1:?usage: release.sh <version without v, e.g. 0.1.2>}"
 TAG="v${VER}"
 OWNER="$(gh api user -q .login)"
 REPO="wxemo_mac"
@@ -46,6 +46,7 @@ rm -f "$TMP"
 echo "sha256=$SHA"
 
 echo "==> Update local Formula template"
+# NOTE: wrapper resolves python3 at runtime (do not hardcode python@3.12 path).
 cat > homebrew/wxemo.rb <<RUBY
 class Wxemo < Formula
   desc "Export WeChat macOS emoticon stickers to local files"
@@ -55,7 +56,7 @@ class Wxemo < Formula
   license "MIT"
   version "${VER}"
 
-  depends_on "python@3.12"
+  depends_on "python3"
   depends_on "openssl@3"
 
   def install
@@ -67,16 +68,26 @@ class Wxemo < Formula
       export WXEMO_PKG_ROOT="#{libexec}"
       export WXEMO_HOME="\${WXEMO_HOME:-\${HOME}/.wxemo}"
       mkdir -p "\$WXEMO_HOME"
-      exec "#{Formula["python@3.12"].opt_bin}/python3" "#{libexec}/cli.py" "\$@"
+      PY=""
+      for c in "#{Formula["python3"].opt_bin}/python3" python3 python3.13 python3.12 python3.11; do
+        if [[ "\$c" == /* ]]; then
+          [[ -x "\$c" ]] && PY="\$c" && break
+        elif command -v "\$c" >/dev/null 2>&1; then
+          PY="\$(command -v "\$c")"
+          break
+        fi
+      done
+      if [[ -z "\$PY" ]]; then
+        echo "wxemo: python3 not found. Try: brew install python3" >&2
+        exit 1
+      fi
+      exec "\$PY" "#{libexec}/cli.py" "\$@"
     EOS
     chmod 0755, bin/"wxemo"
   end
 
   def caveats
     <<~EOS
-      Private repo: set a GitHub token before install/upgrade:
-        export HOMEBREW_GITHUB_API_TOKEN="\$(gh auth token)"
-
       User data (keys & exports):
         ~/.wxemo/
 
@@ -115,6 +126,4 @@ rm -rf "$TAP_DIR"
 
 echo "==> Done"
 echo "Users install with:"
-echo "  export HOMEBREW_GITHUB_API_TOKEN=\"\$(gh auth token)\""
-echo "  brew tap ${OWNER}/wxemo"
-echo "  brew install wxemo"
+echo "  brew tap ${OWNER}/wxemo && brew trust ${OWNER}/wxemo && brew install wxemo"
