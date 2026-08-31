@@ -5,7 +5,7 @@
 ```bash
 wxemo status
 wxemo wizard
-sudo wxemo hunt
+sudo "$(which wxemo)" hunt
 wxemo export
 ```
 
