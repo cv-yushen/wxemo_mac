@@ -1,29 +1,59 @@
 #!/usr/bin/env python3
-"""Verify hunted keys against a WeChat DB page 1 (param-agnostic, HMAC-independent).
-Usage: python3 verify_keys.py /path/to/message_0.db [hunted_keys.txt]"""
+"""Verify hunted 32-byte keys against an encrypted WeChat DB (page-1 probe).
+
+Uses openssl (no PyCrypto dependency).
+
+Usage:
+  python3 verify_keys.py /path/to/emoticon.db [hunted_keys.txt]
+  python3 verify_keys.py --db emoticon.db --keys hunted_keys.txt --write-key emoticon_key.txt
+"""
+
+from __future__ import annotations
+
+import argparse
 import sys
-from Crypto.Cipher import AES
-if len(sys.argv) < 2:
-    sys.exit("usage: verify_keys.py <encrypted.db> [hunted_keys.txt]")
-DB = sys.argv[1]
-KEYS = sys.argv[2] if len(sys.argv) > 2 else "hunted_keys.txt"
-p1 = open(DB, "rb").read(4096); salt = p1[:16]
-def ok(key):
-    for r in (80, 64, 48, 32):
-        ct = p1[16:4096-r]; ct = ct[:len(ct)//16*16]
-        for iv in (p1[4096-r:4096-r+16], salt, b"\0"*16):
-            pt = AES.new(key, AES.MODE_CBC, iv).decrypt(ct)
-            if pt[0]==0x10 and pt[1]==0x00 and pt[2]==pt[3] and pt[2] in (1,2) \
-               and pt[4] in (32,48,64,80) and pt[84] in (2,5,10,13):
-                return (r, iv.hex()[:8])
-    return None
-lines = [l.strip() for l in open(KEYS) if l.strip()]
-print(f"testing {len(lines)} hunted keys against {DB}...")
-for h in lines:
-    try: k = bytes.fromhex(h)
-    except ValueError: continue
-    if len(k) != 32: continue
-    r = ok(k)
-    if r: print("MATCH! key=", h, " reserve=", r[0], " iv=", r[1]); break
-else:
-    print("none of the hunted keys decrypt page1")
+from pathlib import Path
+
+from wcdb_crypto import load_hex_keys, match_key
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("db_pos", nargs="?", help="encrypted .db path")
+    ap.add_argument("keys_pos", nargs="?", help="hex keys file (default: hunted_keys.txt)")
+    ap.add_argument("--db", help="encrypted .db path")
+    ap.add_argument("--keys", type=Path, help="hex keys file")
+    ap.add_argument(
+        "--write-key",
+        type=Path,
+        help="if matched, write the 64-hex key to this file",
+    )
+    args = ap.parse_args()
+
+    db = Path(args.db or args.db_pos or "")
+    if not db.is_file():
+        sys.exit("usage: verify_keys.py <encrypted.db> [hunted_keys.txt]")
+    keys_path = Path(
+        args.keys
+        or args.keys_pos
+        or Path(__file__).resolve().parent / "hunted_keys.txt"
+    )
+    cands = load_hex_keys(keys_path)
+    if not cands:
+        sys.exit(f"no 32-byte hex keys in {keys_path}")
+
+    print(f"testing {len(cands)} hunted keys against {db}...")
+    try:
+        key, reserve = match_key(db, cands)
+    except RuntimeError:
+        print("none of the hunted keys decrypt page1")
+        sys.exit(1)
+
+    print(f"MATCH! key= {key.hex()}  reserve= {reserve}")
+    if args.write_key:
+        args.write_key.write_text(key.hex() + "\n", encoding="utf-8")
+        print(f"wrote {args.write_key}")
+
+
+if __name__ == "__main__":
+    main()

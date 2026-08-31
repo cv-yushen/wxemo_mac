@@ -1,5 +1,8 @@
 # WeChat 4.1.10 (macOS) DB key extraction: memory-scan and `sqlite3_key` both fail — hook `CCCrypt` instead
 
+> **用户手册（逐步操作）**：[USER_GUIDE.md](./USER_GUIDE.md) · **命令入口**：`wxemo` / `./wxemo`  
+> **如何 Homebrew 分发（用户免 clone）**：[DISTRIBUTE.md](./DISTRIBUTE.md)
+
 **TL;DR** — On WeChat **4.1.10** for macOS (Apple Silicon, macOS 26), the two publicly documented ways to recover the per-database SQLCipher keys **both stop working**:
 
 1. **Memory scanning for `x'<64hex key><32hex salt>'`** (used by `ydotdog/wechat-export-macos`, `Thearas/wechat-db-decrypt-macos`, WxEcho, etc.) — the cached key string is **no longer present in process memory**.
@@ -52,6 +55,32 @@ codesign --force --deep --sign - ~/wechat_copy/WeChat.app   # ad-hoc, clears har
 open -n ~/wechat_copy/WeChat.app                            # same container → same login/data
 ```
 Then `sudo lldb -p <copy pid>` and arm the CCCrypt breakpoints.
+
+---
+
+## CLI（推荐入口）
+
+统一命令行：`./wxemo`（或 `python3 cli.py`）
+
+```bash
+./wxemo status          # 查看本机微信/密钥/导出状态
+./wxemo wizard          # 交互式全流程（控制台逐步提示）
+./wxemo prep --open     # 复制并签名微信，然后启动
+sudo ./wxemo hunt       # 猎钥（打开表情面板后 Ctrl-C / quit）
+./wxemo verify          # 匹配 emoticon.db 密钥 → emoticon_key.txt
+./wxemo export          # 解密 + 下载 CDN 表情图 → emoticon_exports/
+./wxemo export --metadata-only
+./wxemo --help
+```
+
+| Step | Command | Output |
+|------|---------|--------|
+| 一键向导 | `./wxemo wizard` | 全程交互 → `emoticon_exports/` |
+| 分步 | `prep` → `hunt` → `export` | 同上 |
+| 旧脚本仍可用 | `./run_emoticon_export.sh` / `hunt.sh` / `emoticon_pipeline.sh` | 同上 |
+
+`emoticon_exports/` 含 `manifest.json`、`cdn_urls.csv`、`images/`、`download_report.json`。  
+依赖：Python 3 + openssl（无需 PyCrypto）。仅用于个人账号导出。
 
 ---
 

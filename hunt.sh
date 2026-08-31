@@ -1,13 +1,32 @@
 #!/bin/bash
-# Attach lldb to the (ad-hoc re-signed) WeChat copy and arm the CCCrypt intercept.
+# Attach lldb to WeChat and arm CCCrypt intercept.
+# Keys go to ${WXEMO_HOME:-$HOME/.wxemo}/hunted_keys.txt
+#
 # Usage: sudo ./hunt.sh
-cd "$(dirname "$0")"
-PID=$(pgrep -x WeChat | head -1)
+#    or: sudo wxemo hunt
+set -euo pipefail
+
+PKG_ROOT="$(cd "$(dirname "$0")" && pwd)"
+# When installed, caller may set WXEMO_PKG_ROOT
+PKG_ROOT="${WXEMO_PKG_ROOT:-$PKG_ROOT}"
+export WXEMO_HOME="${WXEMO_HOME:-$HOME/.wxemo}"
+mkdir -p "$WXEMO_HOME"
+export WXEMO_HUNTED_KEYS="${WXEMO_HUNTED_KEYS:-$WXEMO_HOME/hunted_keys.txt}"
+
+KEYHUNT="$PKG_ROOT/keyhunt.py"
+if [[ ! -f "$KEYHUNT" ]]; then
+  echo "keyhunt.py not found at $KEYHUNT" >&2
+  exit 1
+fi
+
+PID=$(pgrep -x WeChat | head -1 || true)
 [ -z "$PID" ] && { echo "WeChat not running"; exit 1; }
-echo ">>> attaching lldb to WeChat PID=$PID; arming CCCrypt breakpoints."
-echo ">>> after it says 'armed', switch to WeChat and open chats / Moments / favorites to trigger page decryption."
-echo ">>> captured 32-byte keys are appended to hunted_keys.txt. Ctrl-C then 'quit' to stop."
+
+echo ">>> attaching lldb to WeChat PID=$PID"
+echo ">>> keys -> $WXEMO_HUNTED_KEYS"
+echo ">>> after 'armed', open WeChat emoji panel / favorite stickers"
+echo ">>> Ctrl-C then type 'quit' to stop; next: wxemo export"
 exec lldb -p "$PID" \
-  -o "command script import $(pwd)/keyhunt.py" \
+  -o "command script import $KEYHUNT" \
   -o "keyhunt_start" \
   -o "continue"

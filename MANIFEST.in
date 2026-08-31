@@ -1,0 +1,5 @@
+include hunt.sh
+include run_emoticon_export.sh
+include keyhunt.py
+include USER_GUIDE.md
+include README.md

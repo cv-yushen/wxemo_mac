@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wxemo"
+version = "0.1.0"
+description = "Export WeChat (macOS) emoticon stickers locally via CCCrypt key hunt + CDN download"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "wxemo contributors" }]
+keywords = ["wechat", "emoticon", "macos", "sqlcipher"]
+classifiers = [
+  "Environment :: Console",
+  "Operating System :: MacOS",
+  "Programming Language :: Python :: 3",
+  "Topic :: Utilities",
+]
+# No third-party runtime deps (stdlib + openssl CLI + lldb)
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/EXAMPLE/wechat-emoticon-export"
+Documentation = "https://github.com/EXAMPLE/wechat-emoticon-export/blob/main/USER_GUIDE.md"
+
+[project.scripts]
+wxemo = "cli:main"
+
+[tool.setuptools]
+py-modules = [
+  "cli",
+  "wcdb_crypto",
+  "export_emoticons",
+  "emoticon_pipeline",
+  "verify_keys",
+  "wxemo_paths",
+  "keyhunt",
+]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["hunt.sh", "run_emoticon_export.sh", "keyhunt.py"]

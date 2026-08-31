@@ -1,0 +1,9 @@
+#!/bin/bash
+# Local wrapper: same as installed `wxemo` binary.
+# Prefer: pipx/brew install → then call `wxemo` from anywhere.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+export WXEMO_PKG_ROOT="${WXEMO_PKG_ROOT:-$ROOT}"
+export WXEMO_HOME="${WXEMO_HOME:-$HOME/.wxemo}"
+mkdir -p "$WXEMO_HOME"
+exec python3 "$ROOT/cli.py" "$@"

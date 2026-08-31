@@ -1,8 +1,11 @@
 # NEVER commit real keys or decrypted data
 hunted_keys.txt
+emoticon_key.txt
 all_keys.json
 *.json
 decrypted/
+emoticon_exports/
+.wxemo_dev/
 *.db
 *.db-shm
 *.db-wal
@@ -12,3 +15,4 @@ crack_salt
 find_key_by_salt
 find_raw_key
 *.o
+__pycache__/
