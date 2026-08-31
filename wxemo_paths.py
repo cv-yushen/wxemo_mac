@@ -12,7 +12,7 @@ def package_root() -> Path:
     return Path(__file__).resolve().parent
 
 
-def data_dir() -> Path:
+def data_dir(*, ensure: bool = True) -> Path:
     """
     Writable per-user data (keys, exports).
 
@@ -21,8 +21,9 @@ def data_dir() -> Path:
     """
     raw = os.environ.get("WXEMO_HOME", "").strip()
     base = Path(raw).expanduser() if raw else Path.home() / ".wxemo"
-    base.mkdir(parents=True, exist_ok=True)
-    (base / "exports").mkdir(parents=True, exist_ok=True)
+    if ensure:
+        base.mkdir(parents=True, exist_ok=True)
+        (base / "exports").mkdir(parents=True, exist_ok=True)
     return base
 
 

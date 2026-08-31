@@ -12,6 +12,8 @@
   verify   用 hunted_keys 匹配某库密钥
   export   匹配密钥并解密 emoticon.db、下载 CDN 图
   status   查看本机密钥/导出状态
+  cleanup  清理微信副本和/或 ~/.wxemo
+  uninstall  清理本地数据并卸载 brew 包
 
 示例:
   wxemo wizard
@@ -21,6 +23,8 @@
   wxemo export
   wxemo export --metadata-only
   wxemo status
+  wxemo cleanup --copy
+  wxemo uninstall
 """
 
 from __future__ import annotations
@@ -256,6 +260,118 @@ def cmd_status(_: argparse.Namespace) -> None:
     else:
         print("  已有导出；可再跑 wxemo export（已存在图片会 skip）")
         print("  或 wxemo wizard 走交互流程")
+        print("  导出完成后可清理: wxemo cleanup --copy")
+        print("  完全卸载: wxemo uninstall")
+
+
+def _confirm(prompt: str, *, yes: bool) -> bool:
+    if yes:
+        return True
+    ans = input(f"  {prompt} [y/N] ").strip().lower()
+    return ans in ("y", "yes")
+
+
+def _remove_path(path: Path, label: str) -> bool:
+    if not path.exists():
+        print(f"  · {label}: 不存在，跳过  ({path})")
+        return False
+    if path.is_dir():
+        shutil.rmtree(path)
+    else:
+        path.unlink()
+    print(f"  ✓ 已删除 {label}: {path}")
+    return True
+
+
+def _do_cleanup(*, do_copy: bool, do_data: bool) -> None:
+    copy_path = Path(os.environ.get("WECHAT_COPY", DEFAULT_WECHAT_COPY)).expanduser()
+    data_path = data_dir(ensure=False)
+
+    if do_copy:
+        _remove_path(copy_path, "微信调试副本")
+        parent = copy_path.parent
+        if parent.name == "wechat_copy" and parent.is_dir() and not any(parent.iterdir()):
+            _remove_path(parent, "空的 wechat_copy 目录")
+        if subprocess.run(["pgrep", "-x", "WeChat"], capture_output=True).returncode == 0:
+            print("  ! 仍有 WeChat 进程在运行。若它是调试副本，可手动退出：killall WeChat")
+
+    if do_data:
+        _remove_path(data_path, "wxemo 用户数据 (~/.wxemo)")
+
+
+def cmd_cleanup(args: argparse.Namespace) -> None:
+    """Remove WeChat debug copy and/or ~/.wxemo data."""
+    do_copy = args.copy or args.all
+    do_data = args.data or args.all
+    if not do_copy and not do_data:
+        print("请指定清理范围，例如：")
+        print("  wxemo cleanup --copy     # 只删微信调试副本")
+        print("  wxemo cleanup --data     # 只删 ~/.wxemo（含密钥与导出图）")
+        print("  wxemo cleanup --all      # 两者都删")
+        print("  wxemo uninstall          # 清理后提示 brew uninstall")
+        sys.exit(2)
+
+    copy_path = Path(os.environ.get("WECHAT_COPY", DEFAULT_WECHAT_COPY)).expanduser()
+    data_path = data_dir(ensure=False)
+
+    print("=== wxemo cleanup ===")
+    if do_copy:
+        print(f"微信副本: {copy_path}  ({'存在' if copy_path.exists() else '不存在'})")
+    if do_data:
+        print(f"用户数据: {data_path}  ({'存在' if data_path.exists() else '不存在'})")
+    print("")
+    if do_data:
+        print("注意: --data 会删除密钥和已导出的表情图片。")
+    if not _confirm("确认删除以上内容？", yes=args.yes):
+        print("已取消。")
+        sys.exit(0)
+
+    _do_cleanup(do_copy=do_copy, do_data=do_data)
+
+    print("")
+    print("清理完成。CLI 本身仍在；若要卸载命令行工具：")
+    print("  brew uninstall wxemo")
+    print("  brew untap cv-yushen/wxemo    # 可选")
+
+
+def cmd_uninstall(args: argparse.Namespace) -> None:
+    """Clean local artifacts and print / run brew uninstall."""
+    print("=== wxemo uninstall ===")
+    print("将依次：")
+    print("  1) 删除微信调试副本（若存在）")
+    print("  2) 删除用户数据 ~/.wxemo（密钥 + 导出图）")
+    print("  3) 卸载 Homebrew 包 wxemo（若已 brew 安装）")
+    print("")
+    print("注意: 第 2 步会删除已导出的表情图片。若要保留，请先备份：")
+    print(f"  cp -R {data_dir(ensure=False)}/exports ~/Desktop/wxemo_exports_backup")
+    print("")
+    if not _confirm("确认完全卸载？", yes=args.yes):
+        print("已取消。")
+        sys.exit(0)
+
+    _do_cleanup(do_copy=True, do_data=True)
+
+    print("")
+    brew = shutil.which("brew")
+    wxemo_path = shutil.which("wxemo")
+    if brew and wxemo_path and "Cellar/wxemo" in os.path.realpath(wxemo_path):
+        print("正在执行: brew uninstall wxemo")
+        r = subprocess.run([brew, "uninstall", "wxemo"])
+        if r.returncode == 0:
+            print("  ✓ brew uninstall wxemo 完成")
+        else:
+            print("  ! brew uninstall 失败，请手动执行: brew uninstall wxemo")
+        if args.untap:
+            print("正在执行: brew untap cv-yushen/wxemo")
+            subprocess.run([brew, "untap", "cv-yushen/wxemo"], check=False)
+    else:
+        print("未检测到 Homebrew 安装的 wxemo。若从源码使用，删除仓库即可。")
+        print("若曾 brew 安装，请手动：")
+        print("  brew uninstall wxemo")
+        print("  brew untap cv-yushen/wxemo")
+
+    print("")
+    print("卸载流程结束。")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -309,6 +425,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("status", help="查看本机状态")
     p.set_defaults(func=cmd_status)
+
+    p = sub.add_parser("cleanup", help="清理微信副本和/或 ~/.wxemo 数据")
+    p.add_argument("--copy", action="store_true", help="删除微信调试副本")
+    p.add_argument("--data", action="store_true", help="删除 ~/.wxemo（密钥与导出）")
+    p.add_argument("--all", action="store_true", help="删除副本 + 用户数据")
+    p.add_argument("-y", "--yes", action="store_true", help="跳过确认")
+    p.set_defaults(func=cmd_cleanup)
+
+    p = sub.add_parser("uninstall", help="清理本地数据并卸载 brew 包")
+    p.add_argument("-y", "--yes", action="store_true", help="跳过确认")
+    p.add_argument("--untap", action="store_true", help="同时 brew untap cv-yushen/wxemo")
+    p.set_defaults(func=cmd_uninstall)
 
     return ap
 

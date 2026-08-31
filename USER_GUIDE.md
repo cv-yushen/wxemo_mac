@@ -481,7 +481,48 @@ wxemo export --db "同上路径"
 
 ---
 
-## 10. 命令速查表
+## 10. 清理与卸载
+
+导出成功后，建议收尾（**不会**因退出终端自动删除副本）。
+
+### 只删微信调试副本（保留导出图与密钥）
+
+```bash
+wxemo cleanup --copy
+```
+
+### 只删用户数据 `~/.wxemo`（含密钥与导出图）
+
+```bash
+# 若要保留图片，先备份
+cp -R ~/.wxemo/exports ~/Desktop/wxemo_exports_backup
+wxemo cleanup --data
+```
+
+### 副本 + 数据都清
+
+```bash
+wxemo cleanup --all
+```
+
+### 完全卸载（清理 + 卸 brew 包）
+
+```bash
+wxemo uninstall              # 会确认；可加 -y 跳过确认
+wxemo uninstall -y --untap   # 同时 brew untap
+```
+
+等价手动步骤：
+
+```bash
+wxemo cleanup --all -y
+brew uninstall wxemo
+brew untap cv-yushen/wxemo   # 可选
+```
+
+---
+
+## 11. 命令速查表
 
 ```bash
 wxemo --help
@@ -493,11 +534,13 @@ wxemo verify [--db PATH] [--keys FILE] [--write-key FILE] [--no-write-key]
 wxemo export [--db PATH] [--key HEX] [--key-file FILE] [--keys-file FILE] \
                [--out DIR] [--workers N] [--timeout SEC] \
                [--metadata-only] [--keep-decrypted]
+wxemo cleanup --copy|--data|--all [-y]
+wxemo uninstall [-y] [--untap]
 ```
 
 ---
 
-## 11. 安全与合规提醒
+## 12. 安全与合规提醒
 
 - 仅导出**你自己登录账号**的数据。  
 - 不要分享 `emoticon_key.txt` / `hunted_keys.txt` / 解密后的数据库。  

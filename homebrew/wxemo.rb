@@ -1,10 +1,10 @@
 class Wxemo < Formula
   desc "Export WeChat macOS emoticon stickers to local files"
   homepage "https://github.com/cv-yushen/wxemo_mac"
-  url "https://github.com/cv-yushen/wxemo_mac/archive/refs/tags/v0.1.2.tar.gz"
-  sha256 "31fa6791476a54f98f7f4c23572aa6897e1f4def73bf401dc73017fb5f030be0"
+  url "https://github.com/cv-yushen/wxemo_mac/archive/refs/tags/v0.1.3.tar.gz"
+  sha256 "dccf7e41fdd73c0cc418fef4d2944245707f6c9d908c4d3d736696facc6101fe"
   license "MIT"
-  version "0.1.2"
+  version "0.1.3"
 
   depends_on "python3"
   depends_on "openssl@3"
